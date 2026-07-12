@@ -1,68 +1,67 @@
 import { Link } from 'react-router-dom'
-import { Github, Twitter, Linkedin } from 'lucide-react'
+import { Code2 } from 'lucide-react'
+
+const productLinks = [
+    { to: '/dashboard', label: 'Dashboard' },
+    { to: '/problems', label: 'Problems' },
+    { to: '/leaderboard', label: 'Leaderboard' },
+    { to: '/discuss', label: 'Discuss' },
+    { to: '/friends', label: 'Friends' },
+]
+
+const accountLinks = [
+    { to: '/auth', label: 'Sign In' },
+    { to: '/settings', label: 'Settings' },
+]
 
 const AppFooter = () => {
     return (
         <footer className="border-t bg-background text-muted-foreground">
-            <div className="container py-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="container py-12 grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
 
                 {/* Brand & Tagline */}
-                <div>
-                    <Link to="/" className="text-lg font-bold text-foreground hover:text-primary transition">
-                        LeetTracker
+                <div className="lg:col-span-2">
+                    <Link to="/" className="flex items-center gap-2 w-fit font-semibold text-foreground hover:text-primary transition">
+                        <Code2 className="h-5 w-5 text-primary" />
+                        <span className="text-lg">Aptigraph</span>
                     </Link>
-                    <p className="mt-2 text-sm">
-                        Crack LeetCode with AI-powered tracking & smart practice. Stay consistent, solve smarter.
+                    <p className="mt-3 text-sm max-w-xs">
+                        Crack LeetCode with smart tracking &amp; spaced practice. Stay consistent, solve smarter.
                     </p>
                 </div>
 
-                {/* Navigation */}
+                {/* Product */}
                 <div>
-                    <h4 className="text-sm font-semibold text-foreground mb-3">Navigation</h4>
+                    <h4 className="text-sm font-semibold text-foreground mb-3">Product</h4>
                     <ul className="space-y-2 text-sm">
-                        <li><Link to="/problems" className="hover:text-primary transition">Problems</Link></li>
-                        <li><Link to="/leaderboard" className="hover:text-primary transition">Leaderboard</Link></li>
-                        <li><Link to="/about" className="hover:text-primary transition">About</Link></li>
-                        <li><Link to="/auth" className="hover:text-primary transition">Get Started</Link></li>
+                        {productLinks.map((link) => (
+                            <li key={link.to}>
+                                <Link to={link.to} className="hover:text-primary transition">{link.label}</Link>
+                            </li>
+                        ))}
                     </ul>
                 </div>
 
-                {/* Social Links */}
+                {/* Account */}
                 <div>
-                    <h4 className="text-sm font-semibold text-foreground mb-3">Connect</h4>
-                    <div className="flex gap-4">
-                        <a
-                            href="https://github.com/your-repo"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="hover:text-primary transition"
-                        >
-                            <Github className="w-5 h-5" />
-                        </a>
-                        <a
-                            href="https://twitter.com/your-handle"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="hover:text-primary transition"
-                        >
-                            <Twitter className="w-5 h-5" />
-                        </a>
-                        <a
-                            href="https://linkedin.com/in/your-handle"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="hover:text-primary transition"
-                        >
-                            <Linkedin className="w-5 h-5" />
-                        </a>
-                    </div>
+                    <h4 className="text-sm font-semibold text-foreground mb-3">Account</h4>
+                    <ul className="space-y-2 text-sm">
+                        {accountLinks.map((link) => (
+                            <li key={link.to}>
+                                <Link to={link.to} className="hover:text-primary transition">{link.label}</Link>
+                            </li>
+                        ))}
+                    </ul>
                 </div>
 
             </div>
 
             {/* Bottom bar */}
-            <div className="border-t py-4 text-center text-xs text-muted-foreground">
-                © {new Date().getFullYear()} LeetTracker. All rights reserved.
+            <div className="border-t py-4">
+                <div className="container flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted-foreground">
+                    <span>© {new Date().getFullYear()} Aptigraph. All rights reserved.</span>
+                    <span>Built for developers who like data.</span>
+                </div>
             </div>
         </footer>
     )

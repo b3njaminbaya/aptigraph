@@ -1,37 +1,54 @@
 import { useEffect, useMemo, useState } from 'react';
-import { PROBLEMS, ALL_TOPICS, ProblemRow } from '@/data/problems';
+import { useProblems, ProblemRow } from '@/data/problems';
+import { deriveTopics } from '@/lib/topics';
 import { useTracker } from '@/state/tracker';
+import { useAuth } from '@/state/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { setPageMetadata } from '@/lib/seo';
 import { toast } from 'sonner';
+import { Link } from 'react-router-dom';
+import { SearchX } from 'lucide-react';
+import { DifficultyBadge } from '@/components/ui/difficulty-badge';
+import { ProblemStatusIcon } from '@/components/ProblemStatusIcon';
 
 export default function Problems() {
-  useEffect(() => setPageMetadata('LeetTracker – Problems', 'Search and track LeetCode problems by difficulty and topic.', '/problems'), []);
-  const { state, markStatus, logAttempt, setNotes } = useTracker();
+  useEffect(() => setPageMetadata('Aptigraph – Problems', 'Search and track LeetCode problems by difficulty and topic.', '/problems'), []);
+  const { user } = useAuth();
+  const { data: problems, isLoading: problemsLoading } = useProblems();
+  const { entries, logAttempt, setNotes } = useTracker();
   const [query, setQuery] = useState('');
   const [difficulty, setDifficulty] = useState<string>('All');
   const [topic, setTopic] = useState<string>('All');
   const [time, setTime] = useState<number>(30);
 
-  const list = useMemo(() => PROBLEMS.filter(p => {
+  const allTopics = useMemo(() => deriveTopics(problems ?? []), [problems]);
+
+  const list = useMemo(() => (problems ?? []).filter(p => {
     const okQ = !query || p.title.toLowerCase().includes(query.toLowerCase());
     const okD = difficulty === 'All' || p.difficulty === difficulty;
     const okT = topic === 'All' || p.topics.includes(topic);
     return okQ && okD && okT;
-  }), [query, difficulty, topic]);
+  }), [problems, query, difficulty, topic]);
 
-  const onSolved = (p: ProblemRow) => { markStatus(p.id, 'solved'); logAttempt(p.id, time); toast.success(`Marked "${p.title}" as solved`); };
-  const onAttempted = (p: ProblemRow) => { markStatus(p.id, 'attempted'); logAttempt(p.id, time); toast("Logged an attempt"); };
+  const onSolved = (p: ProblemRow) => { logAttempt(p.id, time, 'solved'); toast.success(`Marked "${p.title}" as solved`); };
+  const onAttempted = (p: ProblemRow) => { logAttempt(p.id, time, 'attempted'); toast('Logged an attempt'); };
 
   return (
     <main className="min-h-screen">
       <section className="container py-10">
         <header className="mb-6">
-          <h1 className="text-3xl font-bold">Problems</h1>
-          <p className="text-muted-foreground">Search, filter, and log your progress</p>
+          <h1 className="text-3xl font-bold tracking-tight">Problems</h1>
+          <p className="text-muted-foreground mt-1">Search, filter, and log your progress</p>
         </header>
+
+        {!user && (
+          <div className="mb-6 rounded-lg border p-4 bg-card text-sm">
+            <Link to="/auth" className="font-medium story-link">Sign in</Link> to save your progress — you can still browse the catalog below.
+          </div>
+        )}
+
         <div className="grid gap-3 md:grid-cols-4 mb-6">
           <Input placeholder="Search by title…" value={query} onChange={e=>setQuery(e.target.value)} className="md:col-span-2" />
           <Select value={difficulty} onValueChange={setDifficulty}>
@@ -43,7 +60,7 @@ export default function Problems() {
           <Select value={topic} onValueChange={setTopic}>
             <SelectTrigger><SelectValue placeholder="Topic" /></SelectTrigger>
             <SelectContent>
-              {['All',...ALL_TOPICS].map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+              {['All',...allTopics].map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
@@ -53,30 +70,54 @@ export default function Problems() {
           <Input type="number" value={time} onChange={e=>setTime(parseInt(e.target.value||'0'))} className="w-28" />
         </div>
 
-        <ul className="space-y-3">
-          {list.map(p => {
-            const entry = state.entries[p.id];
-            return (
-              <li key={p.id} className="border rounded-lg p-4 bg-card">
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <a href={p.url} target="_blank" rel="noreferrer" className="font-medium story-link">{p.title}</a>
-                    <div className="text-xs text-muted-foreground mt-1">{p.difficulty} • {p.topics.join(', ')}</div>
-                    {entry?.notes ? <p className="text-sm mt-2">{entry.notes}</p> : null}
+        {problemsLoading ? (
+          <p className="text-muted-foreground">Loading problems…</p>
+        ) : list.length === 0 ? (
+          <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed py-16 text-center">
+            <SearchX className="h-8 w-8 text-muted-foreground" />
+            <p className="font-medium">No problems match your filters</p>
+            <p className="text-sm text-muted-foreground">Try a different search term, difficulty, or topic.</p>
+          </div>
+        ) : (
+          <ul className="space-y-3">
+            {list.map(p => {
+              const entry = entries[p.id];
+              return (
+                <li key={p.id} className="border rounded-lg p-4 bg-card transition-shadow hover:shadow-sm">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-start gap-3 min-w-0">
+                      <ProblemStatusIcon status={entry?.status ?? 'unsolved'} className="mt-1 shrink-0" />
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <a href={p.url} target="_blank" rel="noreferrer" className="font-medium story-link">{p.title}</a>
+                          <DifficultyBadge difficulty={p.difficulty} />
+                        </div>
+                        <div className="flex flex-wrap gap-1 mt-1.5">
+                          {p.topics.map((t) => (
+                            <span key={t} className="rounded-full bg-secondary px-2 py-0.5 text-xs text-secondary-foreground">
+                              {t}
+                            </span>
+                          ))}
+                        </div>
+                        {entry?.notes ? <p className="text-sm mt-2 text-muted-foreground">{entry.notes}</p> : null}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Button variant="secondary" disabled={!user} onClick={() => onAttempted(p)}>Attempted</Button>
+                      <Button variant="hero" disabled={!user} onClick={() => onSolved(p)}>Solved</Button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <Button variant="secondary" onClick={() => onAttempted(p)}>Attempted</Button>
-                    <Button variant="hero" onClick={() => onSolved(p)}>Solved</Button>
+                  <div className="mt-3 grid gap-2 md:grid-cols-2">
+                    <Input placeholder="Add notes…" disabled={!user} onBlur={(e)=>setNotes(p.id, e.target.value)} defaultValue={entry?.notes||''} />
+                    <div className="text-sm text-muted-foreground self-center font-mono">
+                      {entry?.attempts || 0} attempt{entry?.attempts === 1 ? '' : 's'}
+                    </div>
                   </div>
-                </div>
-                <div className="mt-3 grid gap-2 md:grid-cols-2">
-                  <Input placeholder="Add notes…" onBlur={(e)=>setNotes(p.id, e.target.value)} defaultValue={entry?.notes||''} />
-                  <div className="text-sm text-muted-foreground self-center">Attempts: {entry?.attempts||0} • Last status: {entry?.status||'unsolved'}</div>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </section>
     </main>
   );

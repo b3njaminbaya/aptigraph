@@ -1,7 +1,6 @@
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
-import { useEffect, useState } from 'react'
 import {
   LogOut,
   Trophy,
@@ -10,20 +9,21 @@ import {
   Users2,
   MessageSquare,
   Menu,
-  Code2
+  Code2,
+  Settings as SettingsIcon
 } from 'lucide-react'
+import { useAuth } from '@/state/auth'
+import { ThemeToggle } from '@/components/ThemeToggle'
 
 export default function AppHeader() {
-  const [email, setEmail] = useState<string | null>(null)
+  const { user, signOut } = useAuth()
+  const email = user?.email ?? null
   const navigate = useNavigate()
 
-  useEffect(() => {
-    const stored = localStorage.getItem('mock-user-email')
-    setEmail(stored)
-    const handler = () => setEmail(localStorage.getItem('mock-user-email'))
-    window.addEventListener('storage', handler)
-    return () => window.removeEventListener('storage', handler)
-  }, [])
+  const handleSignOut = async () => {
+    await signOut()
+    navigate('/')
+  }
 
   const navLinks = [
     { to: '/dashboard', label: 'Dashboard', icon: <BarChart3 className="inline mr-2 h-4 w-4" /> },
@@ -39,7 +39,7 @@ export default function AppHeader() {
         key={to}
         to={to}
         className={({ isActive }) =>
-          `flex items-center px-3 py-2 rounded-md transition-colors ${isActive ? 'bg-secondary text-foreground' : 'hover:bg-secondary'
+          `flex items-center px-3 py-2 rounded-md font-medium transition-colors ${isActive ? 'bg-secondary text-primary' : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
           } ${isMobile ? 'text-lg' : 'text-sm'}`
         }
       >
@@ -54,7 +54,7 @@ export default function AppHeader() {
         {/* Logo / Brand */}
         <Link to="/" className="flex items-center gap-2 font-semibold hover:opacity-80 transition">
           <Code2 className="h-5 w-5 text-primary" />
-          <span className="text-lg">LeetTracker</span>
+          <span className="text-lg">Aptigraph</span>
         </Link>
 
         {/* Desktop Nav */}
@@ -64,20 +64,20 @@ export default function AppHeader() {
 
         {/* Right Actions */}
         <div className="flex items-center gap-2">
+          <ThemeToggle />
           {/* Desktop Auth */}
           {email ? (
             <>
               <span className="hidden sm:block text-sm text-muted-foreground truncate max-w-[150px]">
                 {email}
               </span>
+              <Button variant="ghost" size="icon" onClick={() => navigate('/settings')} aria-label="Settings">
+                <SettingsIcon className="h-4 w-4" />
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => {
-                  localStorage.removeItem('mock-user-email')
-                  setEmail(null)
-                  navigate('/')
-                }}
+                onClick={handleSignOut}
               >
                 <LogOut className="mr-2 h-4 w-4" /> Sign out
               </Button>
@@ -92,7 +92,7 @@ export default function AppHeader() {
           <div className="md:hidden">
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" aria-label="Open menu">
                   <Menu className="h-6 w-6" />
                 </Button>
               </SheetTrigger>
@@ -105,13 +105,12 @@ export default function AppHeader() {
                         <span className="block text-sm text-muted-foreground mb-2">
                           {email}
                         </span>
+                        <Button variant="outline" className="w-full mb-2" onClick={() => navigate('/settings')}>
+                          <SettingsIcon className="mr-2 h-4 w-4" /> Settings
+                        </Button>
                         <Button
                           variant="outline"
-                          onClick={() => {
-                            localStorage.removeItem('mock-user-email')
-                            setEmail(null)
-                            navigate('/')
-                          }}
+                          onClick={handleSignOut}
                         >
                           <LogOut className="mr-2 h-4 w-4" /> Sign out
                         </Button>

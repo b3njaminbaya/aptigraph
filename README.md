@@ -1,10 +1,10 @@
 <!-- @format -->
 
-# Leetcode-Problem-Tracer
+# Aptigraph
 
 ## Overview
 
-LeetTracker is a **LeetCode problem tracer** that helps users track their problem-solving progress, analyze patterns, and receive AI-driven recommendations for their next problems. It provides detailed statistics, streak tracking, difficulty-based heatmaps, and AI-generated explanations for problem solutions.
+Aptigraph is a **LeetCode problem tracer** that helps users track their problem-solving progress, analyze patterns, and receive AI-driven recommendations for their next problems. It provides detailed statistics, streak tracking, difficulty-based heatmaps, and AI-generated explanations for problem solutions.
 
 ## Features
 
@@ -89,7 +89,7 @@ LeetTracker is a **LeetCode problem tracer** that helps users track their proble
 │   ├── App.css
 │   ├── App.tsx
 │   ├── assets
-│   │   └── leettracker-hero.jpg
+│   │   └── aptigraph-hero.jpg
 │   ├── components
 │   │   ├── analytics
 │   │   │   ├── DifficultyChart.tsx
@@ -191,8 +191,8 @@ LeetTracker is a **LeetCode problem tracer** that helps users track their proble
 ### **1. Clone the Repository**
 
 ```sh
-git clone https://github.com/benjaminmweribaya/Leetcode-Problem-Tracer.git
-cd Leetcode-Problem-Tracer
+git clone https://github.com/benjaminmweribaya/Aptigraph.git
+cd Aptigraph
 ```
 
 ### **2. Backend Setup (FastAPI & PostgreSQL)**
@@ -207,7 +207,7 @@ pip install -r requirements.txt
 #### **Create a `.env` file in the `server/` directory**
 
 ```
-DATABASE_URL=postgresql://username:password@localhost:5432/leettracker
+DATABASE_URL=postgresql://username:password@localhost:5432/aptigraph
 SECRET_KEY=your_secret_key_here
 ```
 

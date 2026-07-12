@@ -1,4 +1,4 @@
-import hero from '@/assets/leettracker-hero.jpg'
+import hero from '@/assets/aptigraph-hero.jpg'
 import { Button } from '@/components/ui/button'
 import { useEffect } from 'react'
 import { setPageMetadata } from '@/lib/seo'
@@ -8,16 +8,16 @@ import { Trophy, BarChart3, Users, Zap, Brain, Target } from 'lucide-react'
 const Index = () => {
   useEffect(() =>
     setPageMetadata(
-      'LeetTracker – LeetCode Tracker & AI Suggestions',
-      'Track LeetCode progress with AI suggestions, streaks, analytics, and leaderboards. Stay consistent and level up daily with LeetTracker.',
+      'Aptigraph – LeetCode Tracker & Smart Practice',
+      'Track LeetCode progress with smart recommendations, streaks, analytics, and leaderboards. Stay consistent and level up daily with Aptigraph.',
       '/'
     ), [])
 
   const features = [
     {
       icon: <Brain className="w-8 h-8 text-primary" />,
-      title: 'AI-Driven Recommendations',
-      desc: 'Get personalized problem suggestions based on your strengths, weaknesses, and recent activity.'
+      title: 'Smart Recommendations',
+      desc: 'Get personalized problem suggestions based on your weakest topics and recent activity.'
     },
     {
       icon: <BarChart3 className="w-8 h-8 text-primary" />,
@@ -36,8 +36,8 @@ const Index = () => {
     },
     {
       icon: <Target className="w-8 h-8 text-primary" />,
-      title: 'Topic-Based Reinforcement',
-      desc: 'Focus your practice where it matters most with AI-targeted topic suggestions.'
+      title: 'Spaced Repetition',
+      desc: 'Solved problems come back for review on a schedule that adapts to how well you know them.'
     },
     {
       icon: <Zap className="w-8 h-8 text-primary" />,
@@ -55,11 +55,11 @@ const Index = () => {
 
           {/* Text Column */}
           <div className="relative z-10 order-2 lg:order-1 text-center lg:text-left">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight">
-              Crack LeetCode with AI-powered tracking & smart practice
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight tracking-tight">
+              Crack LeetCode with smart tracking & spaced practice
             </h1>
             <p className="text-base sm:text-lg text-muted-foreground mt-4 max-w-xl mx-auto lg:mx-0">
-              Stop guessing your next step. LeetTracker helps you solve smarter,
+              Stop guessing your next step. Aptigraph helps you solve smarter,
               not harder — with data-driven insights, streak motivation, and
               tailored problem recommendations.
             </p>
@@ -84,7 +84,7 @@ const Index = () => {
           <div className="relative order-1 lg:order-2 flex justify-center">
             <img
               src={hero}
-              alt="LeetTracker dashboard preview with charts and heatmaps"
+              alt="Aptigraph dashboard preview with charts and heatmaps"
               className="w-full max-w-md lg:max-w-full h-auto rounded-xl border shadow-xl animate-fade-in object-cover"
             />
           </div>
@@ -95,7 +95,7 @@ const Index = () => {
       {/* Features Section */}
       <section className="py-20 bg-muted/30">
         <div className="container">
-          <h2 className="text-3xl font-bold text-center mb-12">
+          <h2 className="text-3xl font-bold tracking-tight text-center mb-12">
             Everything you need to level up
           </h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
@@ -116,7 +116,7 @@ const Index = () => {
       {/* Community Section */}
       <section className="py-20">
         <div className="container text-center max-w-3xl mx-auto">
-          <h2 className="text-3xl font-bold mb-6">
+          <h2 className="text-3xl font-bold tracking-tight mb-6">
             Join a community of problem-solvers
           </h2>
           <p className="text-muted-foreground mb-8">
@@ -135,12 +135,12 @@ const Index = () => {
       {/* Final CTA */}
       <section className="py-20 bg-primary text-primary-foreground">
         <div className="container text-center">
-          <h2 className="text-3xl font-bold mb-4">
+          <h2 className="text-3xl font-bold tracking-tight mb-4">
             Ready to boost your coding skills?
           </h2>
           <p className="mb-8 max-w-2xl mx-auto">
-            Start tracking, practicing, and improving with LeetTracker today —
-            and let data + AI guide your journey to mastery.
+            Start tracking, practicing, and improving with Aptigraph today —
+            and let data guide your journey to mastery.
           </p>
           <Link to="/auth">
             <Button size="lg" variant="secondary">

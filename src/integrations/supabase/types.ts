@@ -7,13 +7,192 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "13.0.4"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
+      attempts: {
+        Row: {
+          created_at: string
+          id: string
+          minutes: number
+          problem_id: number
+          result: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          minutes: number
+          problem_id: number
+          result: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          minutes?: number
+          problem_id?: number
+          result?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attempts_problem_id_fkey"
+            columns: ["problem_id"]
+            isOneToOne: false
+            referencedRelation: "problems"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      discussion_comments: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discussion_comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "discussion_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      discussion_posts: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          problem_id: number
+          upvote_count: number
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          problem_id: number
+          upvote_count?: number
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          problem_id?: number
+          upvote_count?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discussion_posts_problem_id_fkey"
+            columns: ["problem_id"]
+            isOneToOne: false
+            referencedRelation: "problems"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      discussion_votes: {
+        Row: {
+          created_at: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discussion_votes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "discussion_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      friendships: {
+        Row: {
+          addressee_id: string
+          created_at: string
+          requester_id: string
+          status: string
+        }
+        Insert: {
+          addressee_id: string
+          created_at?: string
+          requester_id: string
+          status?: string
+        }
+        Update: {
+          addressee_id?: string
+          created_at?: string
+          requester_id?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      problems: {
+        Row: {
+          created_at: string
+          difficulty: string
+          id: number
+          slug: string
+          title: string
+          topics: string[]
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          difficulty: string
+          id: number
+          slug: string
+          title: string
+          topics?: string[]
+          url: string
+        }
+        Update: {
+          created_at?: string
+          difficulty?: string
+          id?: number
+          slug?: string
+          title?: string
+          topics?: string[]
+          url?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -47,12 +226,79 @@ export type Database = {
         }
         Relationships: []
       }
+      user_problem_status: {
+        Row: {
+          attempts_count: number
+          ease_factor: number
+          first_solved_at: string | null
+          last_activity_at: string
+          next_review_at: string | null
+          notes: string | null
+          problem_id: number
+          review_interval_days: number
+          status: string
+          user_id: string
+        }
+        Insert: {
+          attempts_count?: number
+          ease_factor?: number
+          first_solved_at?: string | null
+          last_activity_at?: string
+          next_review_at?: string | null
+          notes?: string | null
+          problem_id: number
+          review_interval_days?: number
+          status?: string
+          user_id: string
+        }
+        Update: {
+          attempts_count?: number
+          ease_factor?: number
+          first_solved_at?: string | null
+          last_activity_at?: string
+          next_review_at?: string | null
+          notes?: string | null
+          problem_id?: number
+          review_interval_days?: number
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_problem_status_problem_id_fkey"
+            columns: ["problem_id"]
+            isOneToOne: false
+            referencedRelation: "problems"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_leaderboard: {
+        Args: { filter_user_ids?: string[]; limit_count?: number }
+        Returns: {
+          avatar_url: string
+          display_name: string
+          last_active_at: string
+          total_solved: number
+          user_id: string
+        }[]
+      }
+      get_recommendations: {
+        Args: { limit_count?: number }
+        Returns: {
+          difficulty: string
+          problem_id: number
+          reason_solve_rate: number
+          reason_topic: string
+          title: string
+          topics: string[]
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

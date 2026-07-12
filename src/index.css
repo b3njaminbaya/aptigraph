@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* LeetTracker Design System — all colors HSL, gradients, shadows, motion tokens */
+/* Aptigraph Design System — all colors HSL, gradients, shadows, motion tokens */
 
 @layer base {
   :root {
@@ -50,6 +50,11 @@
 
     /* Extras */
     --primary-glow: 260 100% 70%;
+
+    /* Status (fixed — not themed; validated against both light and dark surfaces) */
+    --status-good: 122 89% 33%;      /* Easy / solved */
+    --status-warning: 39 97% 54%;    /* Medium / attempted */
+    --status-critical: 3 63% 51%;    /* Hard */
   }
 
   .dark {

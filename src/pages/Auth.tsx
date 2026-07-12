@@ -1,54 +1,72 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { setPageMetadata } from '@/lib/seo';
+import { useAuth } from '@/state/auth';
 
 export default function Auth() {
-  useEffect(() => setPageMetadata('LeetTracker – Sign In', 'Sign in or create your LeetTracker account.', '/auth'), []);
+  useEffect(() => setPageMetadata('Aptigraph – Sign In', 'Sign in or create your Aptigraph account.', '/auth'), []);
+  const { signIn, signUp, user } = useAuth();
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const signIn = async () => {
+  useEffect(() => {
+    if (user) navigate('/dashboard');
+  }, [user, navigate]);
+
+  const handleSignIn = async () => {
     setLoading(true);
-    // Mock sign in until Supabase is connected
-    await new Promise(r => setTimeout(r, 400));
-    localStorage.setItem('mock-user-email', email);
+    const { error } = await signIn(email, password);
     setLoading(false);
-    toast.success('Signed in (mock). Connect Supabase to enable real auth.');
+    if (error) {
+      toast.error(error);
+      return;
+    }
+    toast.success('Signed in.');
   };
-  const signUp = async () => {
+
+  const handleSignUp = async () => {
     setLoading(true);
-    await new Promise(r => setTimeout(r, 500));
-    localStorage.setItem('mock-user-email', email);
+    const { error } = await signUp(email, password);
     setLoading(false);
-    toast.success('Account created (mock). Connect Supabase for real auth.');
+    if (error) {
+      toast.error(error);
+      return;
+    }
+    toast.success('Account created. Check your email to confirm before signing in.');
   };
 
   return (
-    <main className="min-h-screen bg-background">
-      <section className="container max-w-lg py-16">
-        <h1 className="text-3xl font-bold mb-2">Welcome to LeetTracker</h1>
-        <p className="text-muted-foreground mb-8">Track, analyze, and level up your coding skills.</p>
-        <Tabs defaultValue="signin" className="w-full">
-          <TabsList className="grid grid-cols-2 w-full">
-            <TabsTrigger value="signin">Sign In</TabsTrigger>
-            <TabsTrigger value="signup">Sign Up</TabsTrigger>
-          </TabsList>
-          <TabsContent value="signin" className="mt-6 space-y-4">
-            <Input type="email" placeholder="Email" value={email} onChange={e=>setEmail(e.target.value)} />
-            <Input type="password" placeholder="Password" value={password} onChange={e=>setPassword(e.target.value)} />
-            <Button onClick={signIn} disabled={loading}>{loading ? 'Signing in…' : 'Sign In'}</Button>
-            <p className="text-xs text-muted-foreground">To enable real email/password and OAuth, connect Supabase.</p>
-          </TabsContent>
-          <TabsContent value="signup" className="mt-6 space-y-4">
-            <Input type="email" placeholder="Email" value={email} onChange={e=>setEmail(e.target.value)} />
-            <Input type="password" placeholder="Password (min 6 chars)" value={password} onChange={e=>setPassword(e.target.value)} />
-            <Button variant="hero" onClick={signUp} disabled={loading}>{loading ? 'Creating…' : 'Create Account'}</Button>
-          </TabsContent>
-        </Tabs>
+    <main className="min-h-screen bg-background flex items-center">
+      <section className="container max-w-md py-16">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold tracking-tight">Welcome to Aptigraph</h1>
+          <p className="text-muted-foreground mt-2">Track, analyze, and level up your coding skills.</p>
+        </div>
+        <div className="rounded-lg border bg-card p-6">
+          <Tabs defaultValue="signin" className="w-full">
+            <TabsList className="grid grid-cols-2 w-full">
+              <TabsTrigger value="signin">Sign In</TabsTrigger>
+              <TabsTrigger value="signup">Sign Up</TabsTrigger>
+            </TabsList>
+            <TabsContent value="signin" className="mt-6 space-y-4">
+              <Input type="email" placeholder="Email" value={email} onChange={e=>setEmail(e.target.value)} />
+              <Input type="password" placeholder="Password" value={password} onChange={e=>setPassword(e.target.value)} />
+              <Button className="w-full" onClick={handleSignIn} disabled={loading}>{loading ? 'Signing in…' : 'Sign In'}</Button>
+            </TabsContent>
+            <TabsContent value="signup" className="mt-6 space-y-4">
+              <Input type="email" placeholder="Email" value={email} onChange={e=>setEmail(e.target.value)} />
+              <Input type="password" placeholder="Password (min 6 chars)" value={password} onChange={e=>setPassword(e.target.value)} />
+              <Button variant="hero" className="w-full" onClick={handleSignUp} disabled={loading}>{loading ? 'Creating…' : 'Create Account'}</Button>
+              <p className="text-xs text-muted-foreground text-center">We'll send a confirmation link to your email.</p>
+            </TabsContent>
+          </Tabs>
+        </div>
       </section>
     </main>
   );

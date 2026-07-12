@@ -1,124 +1,210 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useContext, useMemo } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { format } from 'date-fns';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import type { TablesInsert } from '@/integrations/supabase/types';
+import { useAuth } from '@/state/auth';
+import { calculateStreak } from '@/lib/streak';
+import { isMilestone } from '@/lib/milestones';
+import { nextReviewState } from '@/lib/spacedRepetition';
 
 export type Difficulty = 'Easy' | 'Medium' | 'Hard';
 export type ProblemStatus = 'unsolved' | 'attempted' | 'solved';
 
-export interface ProblemMeta {
-  id: string;
-  title: string;
-  difficulty: Difficulty;
-  topics: string[];
-}
-
 export interface ProblemEntry {
   status: ProblemStatus;
   attempts: number;
-  timeTakenMinutes: number[]; // each attempt duration
   notes?: string;
-  solvedDates: string[]; // ISO dates
-}
-
-interface TrackerState {
-  entries: Record<string, ProblemEntry>;
+  intervalDays: number;
+  easeFactor: number;
+  nextReviewAt?: string;
 }
 
 interface TrackerContextValue {
-  state: TrackerState;
-  markStatus: (id: string, status: ProblemStatus) => void;
-  logAttempt: (id: string, minutes: number) => void;
-  setNotes: (id: string, notes: string) => void;
-  resetProblem: (id: string) => void;
-  // Derived
+  entries: Record<number, ProblemEntry>;
+  isLoading: boolean;
+  markStatus: (problemId: number, status: ProblemStatus) => void;
+  logAttempt: (problemId: number, minutes: number, result: 'attempted' | 'solved') => void;
+  setNotes: (problemId: number, notes: string) => void;
+  resetProblem: (problemId: number) => void;
   totalSolved: number;
   currentStreak: number;
 }
 
-const STORAGE_KEY = 'leettracker-state-v1';
-
 const TrackerContext = createContext<TrackerContextValue | null>(null);
 
 export const TrackerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [state, setState] = useState<TrackerState>({ entries: {} });
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const userId = user?.id;
 
-  // load
-  useEffect(() => {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      try { setState(JSON.parse(raw)); } catch {}
-    }
-  }, []);
+  const statusQuery = useQuery({
+    queryKey: ['user_problem_status', userId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('user_problem_status')
+        .select('*')
+        .eq('user_id', userId as string);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!userId,
+  });
 
-  // persist
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  }, [state]);
+  const solvedDatesQuery = useQuery({
+    queryKey: ['solved_dates', userId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('attempts')
+        .select('created_at')
+        .eq('user_id', userId as string)
+        .eq('result', 'solved');
+      if (error) throw error;
+      return data.map((row) => format(new Date(row.created_at), 'yyyy-MM-dd'));
+    },
+    enabled: !!userId,
+  });
 
-  const markStatus = (id: string, status: ProblemStatus) => {
-    setState(prev => {
-      const current = prev.entries[id] || { status: 'unsolved', attempts: 0, timeTakenMinutes: [], notes: '', solvedDates: [] };
-      const nowISO = new Date().toISOString();
-      return {
-        entries: {
-          ...prev.entries,
-          [id]: {
-            ...current,
-            status,
-            solvedDates: status === 'solved' ? Array.from(new Set([...(current.solvedDates||[]), nowISO.substring(0,10)])) : current.solvedDates || [],
-          }
-        }
+  const entries = useMemo(() => {
+    const map: Record<number, ProblemEntry> = {};
+    (statusQuery.data ?? []).forEach((row) => {
+      map[row.problem_id] = {
+        status: row.status as ProblemStatus,
+        attempts: row.attempts_count,
+        notes: row.notes ?? undefined,
+        intervalDays: row.review_interval_days,
+        easeFactor: row.ease_factor,
+        nextReviewAt: row.next_review_at ?? undefined,
       };
     });
-  };
+    return map;
+  }, [statusQuery.data]);
 
-  const logAttempt = (id: string, minutes: number) => {
-    setState(prev => {
-      const current = prev.entries[id] || { status: 'unsolved', attempts: 0, timeTakenMinutes: [], notes: '', solvedDates: [] };
-      return {
-        entries: {
-          ...prev.entries,
-          [id]: { ...current, attempts: current.attempts + 1, timeTakenMinutes: [...current.timeTakenMinutes, minutes] }
-        }
+  const invalidateStatus = () =>
+    queryClient.invalidateQueries({ queryKey: ['user_problem_status', userId] });
+  const invalidateSolvedDates = () =>
+    queryClient.invalidateQueries({ queryKey: ['solved_dates', userId] });
+
+  const markStatusMutation = useMutation({
+    mutationFn: async ({ problemId, status }: { problemId: number; status: ProblemStatus }) => {
+      if (!userId) throw new Error('Sign in to track progress');
+      const { error } = await supabase.from('user_problem_status').upsert({
+        user_id: userId,
+        problem_id: problemId,
+        status,
+        last_activity_at: new Date().toISOString(),
+      });
+      if (error) throw error;
+    },
+    onSuccess: invalidateStatus,
+  });
+
+  const logAttemptMutation = useMutation({
+    mutationFn: async ({
+      problemId,
+      minutes,
+      result,
+    }: {
+      problemId: number;
+      minutes: number;
+      result: 'attempted' | 'solved';
+    }) => {
+      if (!userId) throw new Error('Sign in to track progress');
+      const { error: attemptError } = await supabase.from('attempts').insert({
+        user_id: userId,
+        problem_id: problemId,
+        minutes,
+        result,
+      });
+      if (attemptError) throw attemptError;
+
+      const current = entries[problemId];
+      const wasAlreadySolved = current?.status === 'solved';
+
+      const statusPayload: TablesInsert<'user_problem_status'> = {
+        user_id: userId,
+        problem_id: problemId,
+        status: result,
+        attempts_count: (current?.attempts ?? 0) + 1,
+        last_activity_at: new Date().toISOString(),
       };
-    });
-  };
 
-  const setNotes = (id: string, notes: string) => {
-    setState(prev => {
-      const current = prev.entries[id] || { status: 'unsolved', attempts: 0, timeTakenMinutes: [], notes: '', solvedDates: [] };
-      return { entries: { ...prev.entries, [id]: { ...current, notes } } };
-    });
-  };
-
-  const resetProblem = (id: string) => {
-    setState(prev => {
-      const copy = { ...prev.entries };
-      delete copy[id];
-      return { entries: copy };
-    });
-  };
-
-  const totalSolved = useMemo(() => Object.values(state.entries).filter(e => e.status === 'solved').length, [state]);
-
-  const currentStreak = useMemo(() => {
-    // count consecutive days up to today with at least one solved
-    const days = new Set<string>();
-    Object.values(state.entries).forEach(e => e.solvedDates?.forEach(d => days.add(d)));
-    if (days.size === 0) return 0;
-    let streak = 0;
-    const today = new Date();
-    for (let i = 0; i < 3650; i++) { // 10-year cap
-      const date = new Date(today);
-      date.setDate(today.getDate() - i);
-      const key = date.toISOString().substring(0,10);
-      if (i === 0 || days.has(key)) {
-        if (days.has(key)) streak++;
-        else break;
+      // Only schedule a review once a problem has been solved at least once:
+      // a fresh solve schedules the first review; reviewing an already-solved
+      // problem (success or failure) reschedules it. Struggling on a
+      // never-yet-solved problem doesn't touch scheduling.
+      if (result === 'solved' || wasAlreadySolved) {
+        const next = nextReviewState(
+          { intervalDays: current?.intervalDays ?? 1, easeFactor: current?.easeFactor ?? 2.5 },
+          result === 'solved'
+        );
+        statusPayload.next_review_at = next.nextReviewAt.toISOString();
+        statusPayload.review_interval_days = next.intervalDays;
+        statusPayload.ease_factor = next.easeFactor;
       }
-    }
-    return streak;
-  }, [state]);
 
-  const value: TrackerContextValue = { state, markStatus, logAttempt, setNotes, resetProblem, totalSolved, currentStreak };
+      const { error: statusError } = await supabase
+        .from('user_problem_status')
+        .upsert(statusPayload);
+      if (statusError) throw statusError;
+    },
+    onSuccess: () => {
+      invalidateStatus();
+      invalidateSolvedDates();
+    },
+  });
+
+  const setNotesMutation = useMutation({
+    mutationFn: async ({ problemId, notes }: { problemId: number; notes: string }) => {
+      if (!userId) throw new Error('Sign in to track progress');
+      const { error } = await supabase
+        .from('user_problem_status')
+        .upsert({ user_id: userId, problem_id: problemId, notes });
+      if (error) throw error;
+    },
+    onSuccess: invalidateStatus,
+  });
+
+  const resetProblemMutation = useMutation({
+    mutationFn: async (problemId: number) => {
+      if (!userId) throw new Error('Sign in to track progress');
+      const { error } = await supabase
+        .from('user_problem_status')
+        .delete()
+        .eq('user_id', userId)
+        .eq('problem_id', problemId);
+      if (error) throw error;
+    },
+    onSuccess: invalidateStatus,
+  });
+
+  const totalSolved = useMemo(
+    () => Object.values(entries).filter((e) => e.status === 'solved').length,
+    [entries]
+  );
+
+  const currentStreak = useMemo(
+    () => calculateStreak(solvedDatesQuery.data ?? []),
+    [solvedDatesQuery.data]
+  );
+
+  const value: TrackerContextValue = {
+    entries,
+    isLoading: statusQuery.isLoading || solvedDatesQuery.isLoading,
+    markStatus: (problemId, status) => markStatusMutation.mutate({ problemId, status }),
+    logAttempt: (problemId, minutes, result) => {
+      const wasAlreadySolved = entries[problemId]?.status === 'solved';
+      logAttemptMutation.mutate({ problemId, minutes, result });
+      if (result === 'solved' && !wasAlreadySolved && isMilestone(totalSolved + 1)) {
+        toast.success(`${totalSolved + 1} problems solved! Keep the streak going.`);
+      }
+    },
+    setNotes: (problemId, notes) => setNotesMutation.mutate({ problemId, notes }),
+    resetProblem: (problemId) => resetProblemMutation.mutate(problemId),
+    totalSolved,
+    currentStreak,
+  };
 
   return <TrackerContext.Provider value={value}>{children}</TrackerContext.Provider>;
 };
