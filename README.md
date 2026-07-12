@@ -4,266 +4,97 @@
 
 ## Overview
 
-Aptigraph is a **LeetCode problem tracer** that helps users track their problem-solving progress, analyze patterns, and receive AI-driven recommendations for their next problems. It provides detailed statistics, streak tracking, difficulty-based heatmaps, and AI-generated explanations for problem solutions.
+Aptigraph is a **LeetCode problem tracker** that helps you track your solving progress, spot weak topics, and build a consistent practice habit. It tracks solved/attempted problems, streaks, and topic-level analytics, gives rule-based recommendations for what to practice next based on your weakest topics, schedules solved problems for spaced review, and adds a social layer — a global leaderboard, friends, and per-problem discussion threads.
 
 ## Features
 
-### **User Management**
+### Problem Tracking
 
-- User authentication (Login/Register with Email/Password and OAuth)
-- User profile with problem-solving stats and preferences
-- Streak tracking to encourage consistency
+- A curated 74-problem catalog in the spirit of the well-known "Blind 75" list (title, difficulty, topics — no scraped problem statements), searchable and filterable by difficulty and topic
+- Mark problems **solved**, **attempted**, or leave them unsolved; log time-per-attempt and free-text notes per problem
+- Per-user data is stored in Supabase (Postgres) behind row-level security, not `localStorage` — it follows you across devices
 
-### **Problem Tracking**
+### Analytics & Motivation
 
-- Search and filter LeetCode problems by difficulty and topic
-- Mark problems as **solved, attempted, or unsolved**
-- Log the number of **attempts and time taken** for each problem
-- Save personal **notes and solutions** for each problem
+- Dashboard with solved count, current streak, and next-milestone tracking (with celebratory toasts on milestones)
+- Difficulty heatmap and topic-strength breakdown (Recharts)
+- **Spaced repetition**: solved problems come back for review on an SM-2-inspired schedule that adapts based on whether you solve them again cleanly or struggle
+- **Smart recommendations**: a SQL-driven engine surfaces problems from your weakest topics (lowest solve rate among topics you've actually attempted), not a generic list
 
-### **AI-Driven Features**
+### Social
 
-- **Smart Problem Suggestions**: AI-based problem recommendations based on user performance
-- **AI-Generated Explanations**: Alternative explanations and insights for problems
-- **Topic-Based Reinforcement**: Suggests problems based on weak areas
+- Global **leaderboard** ranked by problems solved
+- **Friends**: search by display name, send/accept/decline friend requests, compare solved counts
+- **Discuss**: per-problem discussion threads with upvoting and comments
 
-### **Analytics & Visualization**
+### Account
 
-- **Difficulty Heatmaps**: Visual representation of problem-solving patterns
-- **Topic Heatmaps**: Identifies strengths and weaknesses in different problem domains
-- **Milestone Achievements**: Notifications for completing problem sets
+- Email/password authentication (Supabase Auth)
+- Editable profile (display name); avatars are generated automatically and deterministically per account (via [DiceBear](https://www.dicebear.com/)) rather than requiring an image upload
+- Password change and full account deletion (deletion runs through a Supabase Edge Function using the service-role key, and cascades across all of a user's data)
 
-### **Leaderboard & Social Features**
+### UI
 
-- **Global Leaderboard** ranking users based on consistency and problem-solving speed
-- **Friend System**: Users can add friends and compare progress
-- **Discussion Boards**: Users can discuss solutions and strategies
-
-### **Notifications & Reminders**
-
-- **Daily Problem Reminder** to maintain streaks
-- **Milestone Celebrations** to encourage engagement
-
----
+- Full dark/light theme support (defaults to dark), built on [shadcn/ui](https://ui.shadcn.com/) and Tailwind CSS
+- Responsive down to mobile, with route-based code splitting so the initial load stays light
 
 ## Tech Stack
 
-### **Frontend**
+- **Frontend**: [Vite](https://vitejs.dev/) + [React](https://react.dev/) + TypeScript, [Tailwind CSS](https://tailwindcss.com/) + [shadcn/ui](https://ui.shadcn.com/), [TanStack Query](https://tanstack.com/query) for server state, [React Router](https://reactrouter.com/), [Recharts](https://recharts.org/)
+- **Backend**: [Supabase](https://supabase.com/) — Postgres with row-level security, Auth, auto-generated REST/RPC (PostgREST), and one Edge Function (account deletion)
+- **Testing**: [Vitest](https://vitest.dev/) + [Testing Library](https://testing-library.com/)
+- **CI**: GitHub Actions (lint, typecheck, test, build on every push/PR)
 
-- [Next.js](https://nextjs.org/) (React Framework for SSR & SEO)
-- Tailwind CSS for styling
+## Getting Started
 
-### **Backend**
-
-- [FastAPI](https://fastapi.tiangolo.com/) (Python-based high-performance API framework)
-
-### **Database**
-
-- [PostgreSQL](https://www.postgresql.org/) (Relational Database for structured data)
-- [Firebase](https://firebase.google.com/) (Optional for real-time tracking)
-
-### **Authentication & Deployment**
-
-- Firebase Authentication / NextAuth.js
-- Vercel (Frontend Hosting)
-- Render / AWS Lambda (Backend Hosting)
-
----
-
-## Project Structure
-
-```
-├── LICENSE
-├── README.md
-├── components.json
-├── eslint.config.js
-├── index.html
-├── package-lock.json
-├── package.json
-├── postcss.config.js
-├── public
-│   ├── favicon.ico
-│   ├── placeholder.svg
-│   └── robots.txt
-├── src
-│   ├── App.css
-│   ├── App.tsx
-│   ├── assets
-│   │   └── aptigraph-hero.jpg
-│   ├── components
-│   │   ├── analytics
-│   │   │   ├── DifficultyChart.tsx
-│   │   │   └── TopicHeatmap.tsx
-│   │   ├── layout
-│   │   │   ├── AppFooter.tsx
-│   │   │   └── AppHeader.tsx
-│   │   └── ui
-│   │       ├── accordion.tsx
-│   │       ├── alert-dialog.tsx
-│   │       ├── alert.tsx
-│   │       ├── aspect-ratio.tsx
-│   │       ├── avatar.tsx
-│   │       ├── badge.tsx
-│   │       ├── breadcrumb.tsx
-│   │       ├── button.tsx
-│   │       ├── calendar.tsx
-│   │       ├── card.tsx
-│   │       ├── carousel.tsx
-│   │       ├── chart.tsx
-│   │       ├── checkbox.tsx
-│   │       ├── collapsible.tsx
-│   │       ├── command.tsx
-│   │       ├── context-menu.tsx
-│   │       ├── dialog.tsx
-│   │       ├── drawer.tsx
-│   │       ├── dropdown-menu.tsx
-│   │       ├── form.tsx
-│   │       ├── hover-card.tsx
-│   │       ├── input-otp.tsx
-│   │       ├── input.tsx
-│   │       ├── label.tsx
-│   │       ├── menubar.tsx
-│   │       ├── navigation-menu.tsx
-│   │       ├── pagination.tsx
-│   │       ├── popover.tsx
-│   │       ├── progress.tsx
-│   │       ├── radio-group.tsx
-│   │       ├── resizable.tsx
-│   │       ├── scroll-area.tsx
-│   │       ├── select.tsx
-│   │       ├── separator.tsx
-│   │       ├── sheet.tsx
-│   │       ├── sidebar.tsx
-│   │       ├── skeleton.tsx
-│   │       ├── slider.tsx
-│   │       ├── sonner.tsx
-│   │       ├── switch.tsx
-│   │       ├── table.tsx
-│   │       ├── tabs.tsx
-│   │       ├── textarea.tsx
-│   │       ├── toast.tsx
-│   │       ├── toaster.tsx
-│   │       ├── toggle-group.tsx
-│   │       ├── toggle.tsx
-│   │       ├── tooltip.tsx
-│   │       └── use-toast.ts
-│   ├── data
-│   │   └── problems.ts
-│   ├── hooks
-│   │   ├── use-mobile.tsx
-│   │   └── use-toast.ts
-│   ├── index.css
-│   ├── integrations
-│   │   └── supabase
-│   │       ├── client.ts
-│   │       └── types.ts
-│   ├── lib
-│   │   ├── seo.ts
-│   │   └── utils.ts
-│   ├── main.tsx
-│   ├── pages
-│   │   ├── Auth.tsx
-│   │   ├── Dashboard.tsx
-│   │   ├── Discuss.tsx
-│   │   ├── Friends.tsx
-│   │   ├── Index.tsx
-│   │   ├── Leaderboard.tsx
-│   │   ├── NotFound.tsx
-│   │   └── Problems.tsx
-│   ├── state
-│   │   └── tracker.tsx
-│   └── vite-env.d.ts
-├── supabase
-│   ├── config.toml
-│   └── migrations
-│       └── 20250809183300_0c271406-3173-432c-a71e-d98cb9c3c090.sql
-├── tailwind.config.ts
-├── tsconfig.app.json
-├── tsconfig.json
-├── tsconfig.node.json
-└── vite.config.ts
-```
-
----
-
-## Installation & Setup
-
-### **1. Clone the Repository**
+### 1. Clone the repository
 
 ```sh
-git clone https://github.com/benjaminmweribaya/Aptigraph.git
-cd Aptigraph
+git clone https://github.com/b3njaminbaya/aptigraph.git
+cd aptigraph
 ```
 
-### **2. Backend Setup (FastAPI & PostgreSQL)**
+### 2. Install dependencies
 
 ```sh
-cd server
-python -m venv venv
-source venv/bin/activate  # (or venv\Scripts\activate on Windows)
-pip install -r requirements.txt
+npm install
 ```
 
-#### **Create a `.env` file in the `server/` directory**
+### 3. Set up Supabase
 
-```
-DATABASE_URL=postgresql://username:password@localhost:5432/aptigraph
-SECRET_KEY=your_secret_key_here
-```
+This project expects a [Supabase](https://supabase.com/) project (free tier is enough).
 
-#### **Run the backend server**
+1. Create a project in the Supabase dashboard.
+2. Copy `.env.example` to `.env` and fill in your project's URL and anon key (Supabase dashboard → Settings → API):
+   ```sh
+   cp .env.example .env
+   ```
+3. Link the [Supabase CLI](https://supabase.com/docs/guides/cli) to your project and apply the migrations in `supabase/migrations/`:
+   ```sh
+   supabase link --project-ref <your-project-ref>
+   supabase db push
+   ```
+4. (Optional) Deploy the account-deletion Edge Function if you want that flow working:
+   ```sh
+   supabase functions deploy delete-account
+   ```
+
+### 4. Run the app
 
 ```sh
-uvicorn main:app --reload
+npm run dev
 ```
 
-### **3. Frontend Setup (Next.js)**
+## Testing & Quality
 
 ```sh
-cd client
-yarn install  # or npm install
+npm run lint       # ESLint
+npx tsc --noEmit   # TypeScript, strict mode
+npm test           # Vitest
+npm run build      # Production build
 ```
 
-#### **Create a `.env.local` file in the `client/` directory**
-
-```
-NEXT_PUBLIC_API_URL=http://localhost:8000
-NEXTAUTH_SECRET=your_auth_secret
-```
-
-#### **Run the frontend server**
-
-```sh
-yarn dev  # or npm run dev
-```
-
----
-
-## API Endpoints
-
-### **Authentication**
-
-- `POST /auth/register` → Register a new user
-- `POST /auth/login` → Authenticate user
-
-### **Problems**
-
-- `GET /problems` → Fetch all problems
-- `GET /problems/{id}` → Get a specific problem
-- `POST /problems/{id}/solve` → Mark a problem as solved
-
-### **User Progress**
-
-- `GET /user/stats` → Fetch user statistics
-- `GET /user/streaks` → Fetch streak history
-- `GET /user/heatmap` → Get heatmap data
-
-### **AI Features**
-
-- `GET /ai/recommendations` → Get AI-based problem recommendations
-- `GET /ai/explanations/{problem_id}` → Get AI-generated explanations for a problem
-
----
+All four run automatically on every push via GitHub Actions.
 
 ## Contribution Guidelines
 
@@ -284,4 +115,4 @@ This project is licensed under the MIT License.
 
 ## Contact
 
-For issues or feature requests, open an issue on GitHub or contact the project owner at [b3njaminbaya@gmail.com](b3njaminbaya@gmail.com).
+For issues or feature requests, open an issue on GitHub or contact the project owner at [b3njaminbaya@gmail.com](mailto:b3njaminbaya@gmail.com).
