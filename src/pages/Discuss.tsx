@@ -70,8 +70,11 @@ function PostCard({ post }: { post: DiscussionPost }) {
                     size="sm"
                     disabled={!commentBody.trim() || createComment.isPending}
                     onClick={() => {
-                      createComment.mutate({ postId: post.id, body: commentBody.trim() });
-                      setCommentBody('');
+                      const body = commentBody.trim();
+                      createComment.mutate(
+                        { postId: post.id, body },
+                        { onSuccess: () => setCommentBody('') }
+                      );
                     }}
                   >
                     Post
@@ -123,9 +126,16 @@ export default function Discuss() {
             <Button
               disabled={!postBody.trim() || createPost.isPending}
               onClick={() => {
-                createPost.mutate({ problemId: Number(selectedProblemId), body: postBody.trim() });
-                setPostBody('');
-                toast.success('Posted');
+                const body = postBody.trim();
+                createPost.mutate(
+                  { problemId: Number(selectedProblemId), body },
+                  {
+                    onSuccess: () => {
+                      setPostBody('');
+                      toast.success('Posted');
+                    },
+                  }
+                );
               }}
             >
               Post

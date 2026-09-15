@@ -26,7 +26,7 @@ function ProfileRow({ profile, action }: { profile: FriendProfile; action?: Reac
 
 export default function Friends() {
   useEffect(() => setPageMetadata('Aptigraph – Friends', 'Add friends and compare progress.', '/friends'), []);
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [query, setQuery] = useState('');
   const { data: friendsData, isLoading } = useFriendsData();
   const { data: searchResults } = useProfileSearch(query);
@@ -43,6 +43,15 @@ export default function Friends() {
       ...friendsData.outgoingRequests.map((f) => f.userId),
     ]);
   }, [friendsData]);
+
+  if (authLoading) {
+    return (
+      <main className="container py-12">
+        <h1 className="text-3xl font-bold tracking-tight mb-2">Friends</h1>
+        <p className="text-muted-foreground">Loading…</p>
+      </main>
+    );
+  }
 
   if (!user) {
     return (
@@ -80,8 +89,10 @@ export default function Friends() {
                     <Button
                       size="sm"
                       onClick={() => {
-                        sendRequest.mutate(profile.userId);
-                        toast.success(`Friend request sent to ${profile.displayName ?? 'user'}`);
+                        sendRequest.mutate(profile.userId, {
+                          onSuccess: () =>
+                            toast.success(`Friend request sent to ${profile.displayName ?? 'user'}`),
+                        });
                       }}
                     >
                       Add

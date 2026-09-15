@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import Problems from './Problems';
@@ -15,16 +15,19 @@ vi.mock('@/data/problems', () => ({
   useProblems: () => ({ data: mockProblems, isLoading: false }),
 }));
 
+const mockResetProblem = vi.fn();
+
 vi.mock('@/state/tracker', () => ({
   useTracker: () => ({
-    entries: {},
+    entries: {
+      1: { status: 'solved', attempts: 2, intervalDays: 1, easeFactor: 2.5 },
+    },
     isLoading: false,
-    markStatus: vi.fn(),
     logAttempt: vi.fn(),
     setNotes: vi.fn(),
-    resetProblem: vi.fn(),
-    totalSolved: 0,
-    currentStreak: 0,
+    resetProblem: mockResetProblem,
+    totalSolved: 1,
+    currentStreak: 1,
   }),
 }));
 
@@ -69,5 +72,23 @@ describe('Problems page filtering', () => {
   it('does not show the sign-in prompt for an authenticated user', () => {
     renderProblems();
     expect(screen.queryByRole('link', { name: 'Sign in' })).not.toBeInTheDocument();
+  });
+
+  it('only offers a Reset action for a problem with tracked progress', () => {
+    renderProblems();
+    // Two Sum (id 1) has an entry in the mocked tracker; the others don't.
+    expect(screen.getAllByRole('button', { name: 'Reset' })).toHaveLength(1);
+  });
+
+  it('asks for confirmation before resetting progress', async () => {
+    const user = userEvent.setup();
+    renderProblems();
+
+    await user.click(screen.getByRole('button', { name: 'Reset' }));
+    const dialog = await screen.findByRole('alertdialog');
+    expect(within(dialog).getByText('Reset progress on "Two Sum"?')).toBeInTheDocument();
+
+    await user.click(within(dialog).getByRole('button', { name: 'Reset' }));
+    expect(mockResetProblem).toHaveBeenCalledWith(1, expect.any(Function));
   });
 });

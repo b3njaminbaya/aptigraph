@@ -24,10 +24,14 @@ export interface ProblemEntry {
 interface TrackerContextValue {
   entries: Record<number, ProblemEntry>;
   isLoading: boolean;
-  markStatus: (problemId: number, status: ProblemStatus) => void;
-  logAttempt: (problemId: number, minutes: number, result: 'attempted' | 'solved') => void;
+  logAttempt: (
+    problemId: number,
+    minutes: number,
+    result: 'attempted' | 'solved',
+    onSuccess?: () => void
+  ) => void;
   setNotes: (problemId: number, notes: string) => void;
-  resetProblem: (problemId: number) => void;
+  resetProblem: (problemId: number, onSuccess?: () => void) => void;
   totalSolved: number;
   currentStreak: number;
 }
@@ -86,20 +90,6 @@ export const TrackerProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const invalidateSolvedDates = () =>
     queryClient.invalidateQueries({ queryKey: ['solved_dates', userId] });
 
-  const markStatusMutation = useMutation({
-    mutationFn: async ({ problemId, status }: { problemId: number; status: ProblemStatus }) => {
-      if (!userId) throw new Error('Sign in to track progress');
-      const { error } = await supabase.from('user_problem_status').upsert({
-        user_id: userId,
-        problem_id: problemId,
-        status,
-        last_activity_at: new Date().toISOString(),
-      });
-      if (error) throw error;
-    },
-    onSuccess: invalidateStatus,
-  });
-
   const logAttemptMutation = useMutation({
     mutationFn: async ({
       problemId,
@@ -148,10 +138,18 @@ export const TrackerProvider: React.FC<{ children: React.ReactNode }> = ({ child
         .from('user_problem_status')
         .upsert(statusPayload);
       if (statusError) throw statusError;
+
+      return { wasAlreadySolved };
     },
-    onSuccess: () => {
+    onSuccess: ({ wasAlreadySolved }, variables) => {
       invalidateStatus();
       invalidateSolvedDates();
+      if (variables.result === 'solved' && !wasAlreadySolved) {
+        const newTotal = totalSolved + 1;
+        if (isMilestone(newTotal)) {
+          toast.success(`${newTotal} problems solved! Keep the streak going.`);
+        }
+      }
     },
   });
 
@@ -192,16 +190,11 @@ export const TrackerProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const value: TrackerContextValue = {
     entries,
     isLoading: statusQuery.isLoading || solvedDatesQuery.isLoading,
-    markStatus: (problemId, status) => markStatusMutation.mutate({ problemId, status }),
-    logAttempt: (problemId, minutes, result) => {
-      const wasAlreadySolved = entries[problemId]?.status === 'solved';
-      logAttemptMutation.mutate({ problemId, minutes, result });
-      if (result === 'solved' && !wasAlreadySolved && isMilestone(totalSolved + 1)) {
-        toast.success(`${totalSolved + 1} problems solved! Keep the streak going.`);
-      }
+    logAttempt: (problemId, minutes, result, onSuccess) => {
+      logAttemptMutation.mutate({ problemId, minutes, result }, { onSuccess });
     },
     setNotes: (problemId, notes) => setNotesMutation.mutate({ problemId, notes }),
-    resetProblem: (problemId) => resetProblemMutation.mutate(problemId),
+    resetProblem: (problemId, onSuccess) => resetProblemMutation.mutate(problemId, { onSuccess }),
     totalSolved,
     currentStreak,
   };

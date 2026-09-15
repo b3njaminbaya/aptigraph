@@ -120,9 +120,9 @@ const Index = () => {
             Join a community of problem-solvers
           </h2>
           <p className="text-muted-foreground mb-8">
-            From beginners to seasoned competitive programmers — thousands of
-            users are tracking their progress, sharing strategies, and
-            celebrating wins together.
+            From beginners to seasoned competitive programmers — track your
+            progress, learn from others' approaches in Discuss, and see how
+            you stack up on the leaderboard as you go.
           </p>
           <Link to="/leaderboard">
             <Button size="lg" variant="default">

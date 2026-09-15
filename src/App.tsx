@@ -22,6 +22,7 @@ const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const Discuss = lazy(() => import("./pages/Discuss"));
 const Friends = lazy(() => import("./pages/Friends"));
 const Auth = lazy(() => import("./pages/Auth"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Settings = lazy(() => import("./pages/Settings"));
 
 const RouteFallback = () => (
@@ -60,6 +61,7 @@ const App = () => (
                     <Route path="/discuss" element={<Discuss />} />
                     <Route path="/friends" element={<Friends />} />
                     <Route path="/auth" element={<Auth />} />
+                    <Route path="/reset-password" element={<ResetPassword />} />
                     <Route path="/settings" element={<Settings />} />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<NotFound />} />

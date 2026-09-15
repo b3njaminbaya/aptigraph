@@ -16,7 +16,7 @@ import { useAuth } from '@/state/auth'
 import { ThemeToggle } from '@/components/ThemeToggle'
 
 export default function AppHeader() {
-  const { user, signOut } = useAuth()
+  const { user, loading, signOut } = useAuth()
   const email = user?.email ?? null
   const navigate = useNavigate()
 
@@ -66,7 +66,9 @@ export default function AppHeader() {
         <div className="flex items-center gap-2">
           <ThemeToggle />
           {/* Desktop Auth */}
-          {email ? (
+          {loading ? (
+            <div className="h-9 w-24 rounded-md bg-muted animate-pulse" aria-hidden="true" />
+          ) : email ? (
             <>
               <span className="hidden sm:block text-sm text-muted-foreground truncate max-w-[150px]">
                 {email}
@@ -100,7 +102,7 @@ export default function AppHeader() {
                 <div className="flex flex-col gap-4">
                   {renderLinks(true)}
                   <div className="border-t pt-4">
-                    {email ? (
+                    {loading ? null : email ? (
                       <>
                         <span className="block text-sm text-muted-foreground mb-2">
                           {email}

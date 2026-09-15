@@ -3,6 +3,12 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "license": "MIT",
+  "author": "Teevexa Ltd",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/teevexa/aptigraph.git"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",

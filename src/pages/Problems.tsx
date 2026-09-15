@@ -12,16 +12,29 @@ import { Link } from 'react-router-dom';
 import { SearchX } from 'lucide-react';
 import { DifficultyBadge } from '@/components/ui/difficulty-badge';
 import { ProblemStatusIcon } from '@/components/ProblemStatusIcon';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+
+const DEFAULT_MINUTES = 30;
 
 export default function Problems() {
   useEffect(() => setPageMetadata('Aptigraph – Problems', 'Search and track LeetCode problems by difficulty and topic.', '/problems'), []);
   const { user } = useAuth();
   const { data: problems, isLoading: problemsLoading } = useProblems();
-  const { entries, logAttempt, setNotes } = useTracker();
+  const { entries, logAttempt, setNotes, resetProblem } = useTracker();
   const [query, setQuery] = useState('');
   const [difficulty, setDifficulty] = useState<string>('All');
   const [topic, setTopic] = useState<string>('All');
-  const [time, setTime] = useState<number>(30);
+  const [minutesByProblem, setMinutesByProblem] = useState<Record<number, number>>({});
 
   const allTopics = useMemo(() => deriveTopics(problems ?? []), [problems]);
 
@@ -32,8 +45,17 @@ export default function Problems() {
     return okQ && okD && okT;
   }), [problems, query, difficulty, topic]);
 
-  const onSolved = (p: ProblemRow) => { logAttempt(p.id, time, 'solved'); toast.success(`Marked "${p.title}" as solved`); };
-  const onAttempted = (p: ProblemRow) => { logAttempt(p.id, time, 'attempted'); toast('Logged an attempt'); };
+  const minutesFor = (problemId: number) => minutesByProblem[problemId] ?? DEFAULT_MINUTES;
+
+  const onSolved = (p: ProblemRow) => {
+    logAttempt(p.id, minutesFor(p.id), 'solved', () => toast.success(`Marked "${p.title}" as solved`));
+  };
+  const onAttempted = (p: ProblemRow) => {
+    logAttempt(p.id, minutesFor(p.id), 'attempted', () => toast('Logged an attempt'));
+  };
+  const onReset = (p: ProblemRow) => {
+    resetProblem(p.id, () => toast.success(`Reset progress on "${p.title}"`));
+  };
 
   return (
     <main className="min-h-screen">
@@ -63,11 +85,6 @@ export default function Problems() {
               {['All',...allTopics].map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
             </SelectContent>
           </Select>
-        </div>
-
-        <div className="mb-4 flex items-center gap-3">
-          <label className="text-sm text-muted-foreground">Attempt time (min)</label>
-          <Input type="number" value={time} onChange={e=>setTime(parseInt(e.target.value||'0'))} className="w-28" />
         </div>
 
         {problemsLoading ? (
@@ -105,12 +122,57 @@ export default function Problems() {
                     <div className="flex items-center gap-2 shrink-0">
                       <Button variant="secondary" disabled={!user} onClick={() => onAttempted(p)}>Attempted</Button>
                       <Button variant="hero" disabled={!user} onClick={() => onSolved(p)}>Solved</Button>
+                      {entry && (entry.status !== 'unsolved' || entry.attempts > 0) && (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="sm" disabled={!user}>Reset</Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Reset progress on "{p.title}"?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This clears its status, notes, and review schedule. Your attempt
+                                history stays intact for your streak and analytics.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => onReset(p)}>Reset</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
                     </div>
                   </div>
-                  <div className="mt-3 grid gap-2 md:grid-cols-2">
-                    <Input placeholder="Add notes…" disabled={!user} onBlur={(e)=>setNotes(p.id, e.target.value)} defaultValue={entry?.notes||''} />
-                    <div className="text-sm text-muted-foreground self-center font-mono">
-                      {entry?.attempts || 0} attempt{entry?.attempts === 1 ? '' : 's'}
+                  <div className="mt-3 flex flex-col gap-2 md:flex-row md:items-center">
+                    <Input
+                      placeholder="Add notes…"
+                      disabled={!user}
+                      onBlur={(e) => setNotes(p.id, e.target.value)}
+                      defaultValue={entry?.notes || ''}
+                      className="flex-1"
+                    />
+                    <div className="flex items-center gap-2 shrink-0">
+                      <label htmlFor={`minutes-${p.id}`} className="text-sm text-muted-foreground whitespace-nowrap">
+                        Minutes
+                      </label>
+                      <Input
+                        id={`minutes-${p.id}`}
+                        type="number"
+                        min={0}
+                        disabled={!user}
+                        value={minutesFor(p.id)}
+                        onChange={(e) =>
+                          setMinutesByProblem((prev) => ({
+                            ...prev,
+                            [p.id]: Math.max(0, parseInt(e.target.value || '0', 10)),
+                          }))
+                        }
+                        className="w-20"
+                      />
+                      <span className="text-sm text-muted-foreground font-mono whitespace-nowrap">
+                        {entry?.attempts || 0} attempt{entry?.attempts === 1 ? '' : 's'}
+                      </span>
                     </div>
                   </div>
                 </li>

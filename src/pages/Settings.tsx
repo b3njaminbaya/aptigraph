@@ -26,14 +26,14 @@ import {
 
 export default function Settings() {
   useEffect(() => setPageMetadata('Aptigraph – Settings', 'Manage your account.', '/settings'), []);
-  const { user, signOut } = useAuth();
+  const { user, loading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { data: profile } = useProfile();
 
   useEffect(() => {
-    if (!user) navigate('/auth');
-  }, [user, navigate]);
+    if (!authLoading && !user) navigate('/auth');
+  }, [user, authLoading, navigate]);
 
   const [displayName, setDisplayName] = useState('');
   const [profileLoading, setProfileLoading] = useState(false);
@@ -50,17 +50,22 @@ export default function Settings() {
   const handleProfileUpdate = async () => {
     if (!user) return;
     setProfileLoading(true);
-    const { error } = await supabase
-      .from('profiles')
-      .update({ display_name: displayName.trim() || null })
-      .eq('id', user.id);
-    setProfileLoading(false);
-    if (error) {
-      toast.error(error.message);
-      return;
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ display_name: displayName.trim() || null })
+        .eq('id', user.id);
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+      queryClient.invalidateQueries({ queryKey: ['profile', user.id] });
+      toast.success('Profile updated');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Network error. Please try again.');
+    } finally {
+      setProfileLoading(false);
     }
-    queryClient.invalidateQueries({ queryKey: ['profile', user.id] });
-    toast.success('Profile updated');
   };
 
   const handlePasswordChange = async () => {
@@ -69,28 +74,46 @@ export default function Settings() {
       return;
     }
     setPasswordLoading(true);
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
-    setPasswordLoading(false);
-    if (error) {
-      toast.error(error.message);
-      return;
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+      setNewPassword('');
+      toast.success('Password updated');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Network error. Please try again.');
+    } finally {
+      setPasswordLoading(false);
     }
-    setNewPassword('');
-    toast.success('Password updated');
   };
 
   const handleDeleteAccount = async () => {
     setDeleteLoading(true);
-    const { error } = await supabase.functions.invoke('delete-account', { method: 'POST' });
-    setDeleteLoading(false);
-    if (error) {
-      toast.error(error.message ?? 'Failed to delete account');
-      return;
+    try {
+      const { error } = await supabase.functions.invoke('delete-account', { method: 'POST' });
+      if (error) {
+        toast.error(error.message ?? 'Failed to delete account');
+        return;
+      }
+      await signOut();
+      toast.success('Account deleted');
+      navigate('/');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Network error. Please try again.');
+    } finally {
+      setDeleteLoading(false);
     }
-    await signOut();
-    toast.success('Account deleted');
-    navigate('/');
   };
+
+  if (authLoading) {
+    return (
+      <main className="min-h-screen flex items-center justify-center">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted border-t-primary" />
+      </main>
+    );
+  }
 
   if (!user) return null;
 

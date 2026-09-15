@@ -2,6 +2,12 @@
 
 # Aptigraph
 
+[![CI](https://github.com/teevexa/aptigraph/actions/workflows/ci.yml/badge.svg)](https://github.com/teevexa/aptigraph/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+
+Maintained by [Teevexa Ltd](https://www.teevexa.com).
+
 ## Overview
 
 Aptigraph is a **LeetCode problem tracker** that helps you track your solving progress, spot weak topics, and build a consistent practice habit. It tracks solved/attempted problems, streaks, and topic-level analytics, gives rule-based recommendations for what to practice next based on your weakest topics, schedules solved problems for spaced review, and adds a social layer — a global leaderboard, friends, and per-problem discussion threads.
@@ -11,7 +17,8 @@ Aptigraph is a **LeetCode problem tracker** that helps you track your solving pr
 ### Problem Tracking
 
 - A curated 74-problem catalog in the spirit of the well-known "Blind 75" list (title, difficulty, topics — no scraped problem statements), searchable and filterable by difficulty and topic
-- Mark problems **solved**, **attempted**, or leave them unsolved; log time-per-attempt and free-text notes per problem
+- Mark problems **solved**, **attempted**, or leave them unsolved; log time-per-attempt (per problem) and free-text notes per problem
+- **Reset** a problem's status, notes, and review schedule from the Problems page (with a confirmation step) — your attempt history is kept for streaks and analytics
 - Per-user data is stored in Supabase (Postgres) behind row-level security, not `localStorage` — it follows you across devices
 
 ### Analytics & Motivation
@@ -29,7 +36,7 @@ Aptigraph is a **LeetCode problem tracker** that helps you track your solving pr
 
 ### Account
 
-- Email/password authentication (Supabase Auth)
+- Email/password authentication (Supabase Auth), with a "Forgot password?" email-reset flow
 - Editable profile (display name); avatars are generated automatically and deterministically per account (via [DiceBear](https://www.dicebear.com/)) rather than requiring an image upload
 - Password change and full account deletion (deletion runs through a Supabase Edge Function using the service-role key, and cascades across all of a user's data)
 
@@ -50,7 +57,7 @@ Aptigraph is a **LeetCode problem tracker** that helps you track your solving pr
 ### 1. Clone the repository
 
 ```sh
-git clone https://github.com/b3njaminbaya/aptigraph.git
+git clone https://github.com/teevexa/aptigraph.git
 cd aptigraph
 ```
 
@@ -78,6 +85,7 @@ This project expects a [Supabase](https://supabase.com/) project (free tier is e
    ```sh
    supabase functions deploy delete-account
    ```
+5. To make "Forgot password?" work, add your app's `/reset-password` URL (e.g. `http://localhost:5173/reset-password` for local dev, plus your production URL) to **Authentication → URL Configuration → Redirect URLs** in the Supabase dashboard.
 
 ### 4. Run the app
 
@@ -96,23 +104,20 @@ npm run build      # Production build
 
 All four run automatically on every push via GitHub Actions.
 
-## Contribution Guidelines
+## Contributing
 
-We welcome contributions! To contribute:
+We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for dev setup, the PR process, and the commit sign-off (DCO) requirement. Please also read the [Code of Conduct](CODE_OF_CONDUCT.md).
 
-1. Fork the repository.
-2. Create a new branch (`feature/new-feature` or `fix/bug-fix`).
-3. Commit and push your changes.
-4. Open a pull request with a clear description.
+Found a security issue? Please follow [SECURITY.md](SECURITY.md) instead of opening a public issue.
 
 ---
 
 ## License
 
-This project is licensed under the MIT License.
+MIT © [Teevexa Ltd](https://www.teevexa.com). See [LICENSE](LICENSE).
 
 ---
 
 ## Contact
 
-For issues or feature requests, open an issue on GitHub or contact the project owner at [b3njaminbaya@gmail.com](mailto:b3njaminbaya@gmail.com).
+For issues or feature requests, open an issue on GitHub. For anything else, contact [b3njaminbaya@gmail.com](mailto:b3njaminbaya@gmail.com).
