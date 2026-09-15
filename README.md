@@ -120,4 +120,4 @@ MIT © [Teevexa Ltd](https://www.teevexa.com). See [LICENSE](LICENSE).
 
 ## Contact
 
-For issues or feature requests, open an issue on GitHub. For anything else, contact [b3njaminbaya@gmail.com](mailto:b3njaminbaya@gmail.com).
+For issues or feature requests, open an issue on GitHub. For anything else, contact [teevexa@gmail.com](mailto:teevexa@gmail.com).
