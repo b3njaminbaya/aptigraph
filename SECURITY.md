@@ -6,7 +6,7 @@ If you find a security vulnerability in Aptigraph (for example, a way to bypass
 Supabase row-level security, read another user's data, or escalate privileges),
 please **do not open a public GitHub issue**.
 
-Instead, email **[teevexa@gmail.com](mailto:teevexa@gmail.com)** with:
+Instead, email **[b3njaminbaya@gmail.com](mailto:b3njaminbaya@gmail.com)** with:
 
 - A description of the vulnerability and its impact
 - Steps to reproduce it (a minimal repro is ideal)
