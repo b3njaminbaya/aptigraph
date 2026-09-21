@@ -5,7 +5,7 @@
 [![CI](https://github.com/b3njaminbaya/aptigraph/actions/workflows/ci.yml/badge.svg)](https://github.com/b3njaminbaya/aptigraph/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-A personal portfolio project by [Benjamin Mweri Baya](https://github.com/b3njaminbaya).
+A personal portfolio project by [Benjamin Baya](https://github.com/b3njaminbaya).
 
 **Live demo: [aptigraph.vercel.app](https://aptigraph.vercel.app)**
 
@@ -204,7 +204,7 @@ Found a security issue? See [SECURITY.md](SECURITY.md) for how to report it priv
 
 ## License
 
-MIT © Benjamin Mweri Baya. See [LICENSE](LICENSE).
+MIT © Benjamin Baya. See [LICENSE](LICENSE).
 
 ## Contact
 
