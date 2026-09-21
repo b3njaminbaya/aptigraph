@@ -2,9 +2,8 @@ import { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryCache, QueryClient, QueryClientProvider, MutationCache } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { toast } from "sonner";
 import Index from "./pages/Index";
 import AppHeader from "./components/layout/AppHeader";
 import AppFooter from "./components/layout/AppFooter";
@@ -12,6 +11,7 @@ import { TrackerProvider } from "./state/tracker";
 import { AuthProvider } from "./state/auth";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { ThemeProvider } from "./components/ThemeProvider";
+import { createQueryClient } from "./lib/queryClient";
 
 // Landing page is the most common entry point, so it stays eager. Everything
 // else loads on demand to keep the initial bundle small.
@@ -31,15 +31,7 @@ const RouteFallback = () => (
   </div>
 );
 
-const onError = (error: unknown) => {
-  const message = error instanceof Error ? error.message : "Something went wrong";
-  toast.error(message);
-};
-
-const queryClient = new QueryClient({
-  queryCache: new QueryCache({ onError }),
-  mutationCache: new MutationCache({ onError }),
-});
+const queryClient = createQueryClient();
 
 const App = () => (
   <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>

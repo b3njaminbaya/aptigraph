@@ -1,5 +1,0 @@
-blank_issues_enabled: false
-contact_links:
-  - name: Security vulnerability
-    url: https://github.com/teevexa/aptigraph/security/policy
-    about: Please report security issues privately — see SECURITY.md, not a public issue.

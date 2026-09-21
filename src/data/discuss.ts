@@ -37,7 +37,9 @@ async function attachAuthorNames<T extends { user_id: string }>(rows: T[]) {
 export function usePosts(problemId?: number) {
   const { user } = useAuth();
   return useQuery({
-    queryKey: ['discussion_posts', problemId ?? 'all'],
+    // Keyed by user: hasVoted depends on who is viewing, and the session loads
+    // after first render, so the list must refetch once the user is known.
+    queryKey: ['discussion_posts', problemId ?? 'all', user?.id ?? null],
     queryFn: async (): Promise<DiscussionPost[]> => {
       let request = supabase
         .from('discussion_posts')

@@ -5,7 +5,7 @@ import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["dist", "supabase/functions"] },
+  { ignores: ["dist", "coverage", "supabase/functions"] },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ["**/*.{ts,tsx}"],
@@ -25,5 +25,10 @@ export default tseslint.config(
       ],
       "@typescript-eslint/no-unused-vars": "warn",
     },
+  },
+  {
+    // Test helpers are not hot-reloaded components.
+    files: ["src/test/**"],
+    rules: { "react-refresh/only-export-components": "off" },
   }
 );

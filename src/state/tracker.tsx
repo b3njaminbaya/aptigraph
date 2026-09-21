@@ -115,7 +115,9 @@ export const TrackerProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const statusPayload: TablesInsert<'user_problem_status'> = {
         user_id: userId,
         problem_id: problemId,
-        status: result,
+        // A failed review must not un-solve a problem: it stays solved (and
+        // due again tomorrow) so it remains in the review queue and the count.
+        status: wasAlreadySolved ? 'solved' : result,
         attempts_count: (current?.attempts ?? 0) + 1,
         last_activity_at: new Date().toISOString(),
       };

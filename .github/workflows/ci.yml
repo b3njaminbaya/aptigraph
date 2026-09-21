@@ -25,8 +25,18 @@ jobs:
       - name: Type check
         run: npx tsc --noEmit -p tsconfig.app.json
 
-      - name: Test
-        run: npm test
+      - name: Test (with coverage thresholds)
+        run: npm run test:coverage
 
       - name: Build
         run: npm run build
+
+  # Runs the real migrations on a throwaway Postgres and asserts row-level
+  # security behaviour as anon / authenticated users. Needs no secrets.
+  database:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Database tests (RLS, triggers, RPCs)
+        run: npm run test:db
